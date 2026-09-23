@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Happy Birthday!</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alex+Brush&family=Zen+Maru+Gothic:wght@700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background: radial-gradient(circle at center, #1a121e 0%, #08040a 100%);
+      color: #fff;
+      font-family: 'Zen Maru Gothic', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: background 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+    }
+
+    body.celebrate {
+      background: radial-gradient(circle at center, #fff6f8 0%, #fedce3 100%);
+      color: #4a2832;
+    }
+
+    /* 開始時の注意ポップアップ */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+    .modal-overlay.hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .modal-card {
+      background: #ffffff;
+      color: #3f2229;
+      padding: 26px 22px;
+      border-radius: 24px;
+      text-align: center;
+      max-width: 310px;
+      width: 88%;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.3);
+      animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .modal-icon {
+      font-size: 38px;
+      margin-bottom: 8px;
+    }
+    .modal-title {
+      font-size: 19px;
+      font-weight: 900;
+      color: #d83a56;
+      margin-bottom: 6px;
+    }
+    .modal-desc {
+      font-size: 15px;
+      font-weight: 700;
+      color: #553e44;
+      line-height: 1.5;
+      margin-bottom: 18px;
+    }
+    .modal-btn {
+      background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+      color: #fff;
+      border: none;
+      padding: 12px 36px;
+      border-radius: 25px;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(255, 117, 140, 0.4);
+      width: 100%;
+      transition: transform 0.1s ease;
+    }
+    .modal-btn:active {
+      transform: scale(0.97);
+    }
+
+    .candle-glow {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 480px;
+      height: 480px;
+      background: radial-gradient(circle, rgba(255, 170, 70, 0.35) 0%, rgba(255, 90, 40, 0.08) 50%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+      animation: warmBreathe 2s infinite ease-in-out alternate;
+      transition: opacity 0.6s ease;
+      z-index: 1;
+    }
+    body.celebrate .candle-glow { opacity: 0; }
+    @keyframes warmBreathe {
+      0% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.8; }
+      100% { transform: translate(-50%, -50%) scale(1.05); opacity: 1; }
+    }
+
+    .container {
+      text-align: center;
+      width: 100%;
+      max-width: 440px;
+      padding: 16px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .guide-box {
+      margin-bottom: 14px;
+      transition: all 0.4s ease;
+    }
+    body.celebrate .guide-box {
+      opacity: 0;
+      transform: translateY(-12px);
+      pointer-events: none;
+      height: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+    .guide-text {
+      font-size: 14px;
+      color: #fed299;
+      margin-bottom: 8px;
+      text-shadow: 0 0 10px rgba(255, 210, 153, 0.4);
+    }
+    .mic-button {
+      background: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
+      color: #fff;
+      border: none;
+      padding: 12px 26px;
+      border-radius: 25px;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(255, 117, 140, 0.35);
+      transition: transform 0.1s ease;
+    }
+    .mic-button:active { transform: scale(0.96); }
+
+    .cake-stage {
+      position: relative;
+      width: 310px;
+      margin: 0 auto;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    .cake-img {
+      width: 100%;
+      height: auto;
+      display: block;
+      filter: brightness(0.92) contrast(1.05);
+      transition: filter 1s ease;
+    }
+    body.celebrate .cake-img {
+      filter: brightness(1.03) drop-shadow(0 15px 25px rgba(220, 100, 130, 0.18));
+    }
+
+    /* プレート（名前のみ・中央揃え） */
+    .plate-text {
+      position: absolute;
+      top: 42.5%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 140px;
+      text-align: center;
+      color: #5c3a21;
+      text-shadow: 0 1px 1px rgba(255, 255, 255, 0.7);
+      pointer-events: none;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.2;
+    }
+    .font-en { font-family: 'Alex Brush', cursive; font-size: 32px; }
+    .font-ja { font-family: 'Zen Maru Gothic', sans-serif; font-size: 16px; font-weight: 900; letter-spacing: 1px; }
+
+    .flame-holder {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .candle-fire {
+      position: absolute;
+      width: 14px;
+      height: 24px;
+      transform: translateX(-50%);
+    }
+    .fire-1 { left: 32.5%; top: 2.2%; }
+    .fire-2 { left: 43.2%; top: -1.5%; }
+    .fire-3 { left: 57.2%; top: -1.5%; }
+    .fire-4 { left: 66.8%; top: 2.5%; }
+    .fire-5 { left: 76.2%; top: 8.8%; }
+
+    .flame-body {
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse at bottom, #ffffff 0%, #ffea00 30%, #ff4800 70%, transparent 95%);
+      border-radius: 50% 50% 25% 25%;
+      box-shadow: 0 0 14px #ff9e00, 0 0 26px #ff4500;
+      animation: flameWiggle 0.12s infinite alternate;
+      transform-origin: center bottom;
+      transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.25s ease;
+    }
+    .flame-body.struggling {
+      animation: flameFlickerFast 0.06s infinite alternate;
+      transform: scale(0.65) translateY(4px);
+      box-shadow: 0 0 6px #ff9e00, 0 0 10px #ff4500;
+    }
+    .flame-body.off { opacity: 0; transform: scale(0); }
+
+    @keyframes flameWiggle {
+      0% { transform: rotate(-3deg) scaleY(1); }
+      100% { transform: rotate(3deg) scaleY(1.1); }
+    }
+    @keyframes flameFlickerFast {
+      0% { transform: rotate(-10deg) scale(0.7, 0.6); }
+      100% { transform: rotate(10deg) scale(0.5, 0.8); }
+    }
+
+    .smoke-puff {
+      position: absolute;
+      top: -4px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 8px;
+      background: rgba(230, 230, 230, 0.75);
+      border-radius: 50%;
+      opacity: 0;
+    }
+    .smoke-puff.rise { animation: smokeRise 1.6s forwards ease-out; }
+    @keyframes smokeRise {
+      0% { opacity: 0.8; transform: translate(-50%, 0) scale(1); }
+      50% { opacity: 0.45; transform: translate(calc(-50% + 8px), -24px) scale(2.2); }
+      100% { opacity: 0; transform: translate(calc(-50% - 10px), -48px) scale(3.5); }
+    }
+
+    /* 吹き消し後のメッセージ（枠なし・中央揃え・大きく表示） */
+    .congratulations-box {
+      opacity: 0;
+      transform: translateY(30px) scale(0.9);
+      transition: all 0.85s cubic-bezier(0.34, 1.56, 0.64, 1);
+      margin-top: 24px;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    body.celebrate .congratulations-box {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    .msg-line-header {
+      font-size: 26px;
+      font-weight: 900;
+      color: #d83a56;
+      margin-bottom: 6px;
+      letter-spacing: 1px;
+      line-height: 1.2;
+    }
+    .msg-line-name {
+      font-size: 32px;
+      font-weight: 900;
+      color: #3f2229;
+      margin-bottom: 8px;
+      line-height: 1.3;
+      letter-spacing: 0.5px;
+    }
+    .msg-line-footer {
+      font-size: 18px;
+      font-weight: 700;
+      color: #6d4852;
+      line-height: 1.5;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 音声注意ポップアップ -->
+  <div class="modal-overlay" id="noticeModal">
+    <div class="modal-card">
+      <div class="modal-icon">🔊</div>
+      <div class="modal-title">音声が流れます</div>
+      <div class="modal-desc">音量にご注意ください！</div>
+      <button class="modal-btn" id="startOkBtn">OK（はじめる）</button>
+    </div>
+  </div>
+
+  <div class="candle-glow"></div>
+
+  <div class="container">
+    <div class="guide-box">
+      <div class="guide-text" id="guideLabel">🕯️ 息を吹きかけるか、タップしてね！</div>
+      <button class="mic-button" id="startMicBtn">息で消すモード 🌬️</button>
+    </div>
+
+    <div class="cake-stage" id="cakeStage">
+      <img src="https://i.postimg.cc/y6TH4MpX/file-00000000559481f58e5685ae5d6e98b6.png" class="cake-img" alt="Birthday Cake">
+
+      <div class="plate-text" id="plateText"></div>
+
+      <div class="flame-holder">
+        <div class="candle-fire fire-1"><div class="flame-body"></div><div class="smoke-puff"></div></div>
+        <div class="candle-fire fire-2"><div class="flame-body"></div><div class="smoke-puff"></div></div>
+        <div class="candle-fire fire-3"><div class="flame-body"></div><div class="smoke-puff"></div></div>
+        <div class="candle-fire fire-4"><div class="flame-body"></div><div class="smoke-puff"></div></div>
+        <div class="candle-fire fire-5"><div class="flame-body"></div><div class="smoke-puff"></div></div>
+      </div>
+    </div>
+
+    <div class="congratulations-box">
+      <div class="msg-line-header" id="msgHeader"></div>
+      <div class="msg-line-name" id="msgName"></div>
+      <div class="msg-line-footer" id="msgFooter"></div>
+    </div>
+  </div>
+
+  <script>
+    const FIREWORK_URL = "https://files.catbox.moe/ov5tbq.mp3";
+    const BGM_URL = "https://files.catbox.moe/qm97fn.mp3";
+
+    const FIXED_HEADER_TEXT = "Happy Birthday";
+    const FIXED_FOOTER_TEXT = "素敵な年を過ごしてね";
+    const DEFAULT_NAME = "Special Friend";
+
+    const params = new URLSearchParams(window.location.search);
+    const targetName = params.get('name') || DEFAULT_NAME;
+
+    const plateText = document.getElementById('plateText');
+    plateText.innerText = targetName;
+
+    const isJapanese = /[\u3000-\u303f\u3040-\u309f\u30a0-\u30ff\uff00-\uff9f\u4e00-\u9faf]/.test(targetName);
+    plateText.classList.add(isJapanese ? 'font-ja' : 'font-en');
+
+    document.getElementById('msgHeader').innerText = FIXED_HEADER_TEXT;
+    document.getElementById('msgName').innerText = targetName;
+    document.getElementById('msgFooter').innerText = FIXED_FOOTER_TEXT;
+
+    let audioCtx = null;
+    let masterGain = null;
+    let fireworkBuffer = null;
+    let bgmBuffer = null;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        masterGain = audioCtx.createGain();
+        masterGain.gain.setValueAtTime(1.0, audioCtx.currentTime);
+        masterGain.connect(audioCtx.destination);
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    async function loadSoundBuffer(url) {
+      const ctx = getAudioContext();
+      const res = await fetch(url);
+      const arrayBuffer = await res.arrayBuffer();
+      return await ctx.decodeAudioData(arrayBuffer);
+    }
+
+    // 頭欠けを物理的に防ぐセーフ再生（スピーカーの立ち上がり時間を確保）
+    function playTrackSafely(buffer, delaySec = 0) {
+      if (!buffer) return;
+      try {
+        const ctx = getAudioContext();
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+
+        // 専用のゲインノードを作り、スピーカーの瞬断による頭欠けを防止
+        const trackGain = ctx.createGain();
+        const startTime = ctx.currentTime + delaySec;
+
+        // 0秒から確実に再生スタート
+        source.connect(trackGain);
+        trackGain.connect(masterGain);
+
+        source.start(startTime, 0);
+      } catch (e) {
+        console.error("Audio Play Error:", e);
+      }
+    }
+
+    const startOkBtn = document.getElementById('startOkBtn');
+    startOkBtn.addEventListener('click', async () => {
+      startOkBtn.innerText = "準備中...";
+      startOkBtn.disabled = true;
+
+      const ctx = getAudioContext();
+
+      try {
+        const [fBuf, bBuf] = await Promise.all([
+          loadSoundBuffer(FIREWORK_URL),
+          loadSoundBuffer(BGM_URL)
+        ]);
+        fireworkBuffer = fBuf;
+        bgmBuffer = bBuf;
+
+        // スピーカーハードウェアを事前に起こしておく（無音パルス）
+        const silentOsc = ctx.createOscillator();
+        const silentGain = ctx.createGain();
+        silentGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+        silentOsc.connect(silentGain);
+        silentGain.connect(ctx.destination);
+        silentOsc.start(ctx.currentTime);
+        silentOsc.stop(ctx.currentTime + 0.05);
+
+      } catch (err) {
+        console.error("Audio preload error:", err);
+      }
+
+      document.getElementById('noticeModal').classList.add('hidden');
+    });
+
+    let isBlownOut = false;
+    let micStream = null;
+    let micSourceNode = null;
+    let micAnimationId = null;
+
+    function triggerBlowOut() {
+      if (isBlownOut) return;
+      isBlownOut = true;
+
+      // 1. マイクループとノードを即座に破棄
+      if (micAnimationId) {
+        cancelAnimationFrame(micAnimationId);
+        micAnimationId = null;
+      }
+      if (micSourceNode) {
+        try { micSourceNode.disconnect(); } catch (e) {}
+        micSourceNode = null;
+      }
+      if (micStream) {
+        try { micStream.getTracks().forEach(t => t.stop()); } catch (e) {}
+        micStream = null;
+      }
+
+      // 2. 【頭欠け対策の決定打】
+      // スマホがマイクからスピーカーへ出力を切り替える時間を0.18秒だけ確保し、
+      // バッファが完全に安定した状態で曲を「0.00秒（完全な頭）」から鳴らす
+      playTrackSafely(bgmBuffer, 0.18);
+
+      // 3. 花火の音は曲の立ち上がりに合わせて1.6秒後に自然にミックス
+      playTrackSafely(fireworkBuffer, 1.6);
+
+      // 4. 部屋の明転
+      setTimeout(() => {
+        document.body.classList.add('celebrate');
+      }, 100);
+
+      // 5. 炎が消えて煙が上がる
+      const flames = document.querySelectorAll('.flame-body');
+      const smokes = document.querySelectorAll('.smoke-puff');
+      flames.forEach((flame, i) => {
+        setTimeout(() => {
+          flame.classList.remove('struggling');
+          flame.classList.add('off');
+          if (smokes[i]) smokes[i].classList.add('rise');
+        }, i * 40);
+      });
+
+      // 6. 紙吹雪（第1弾）
+      const colors = ['#e63946', '#ffd166', '#ff8da1', '#ffffff', '#457b9d', '#06d6a0'];
+      try {
+        confetti({ particleCount: 50, spread: 80, origin: { y: 0.65 }, colors: colors, startVelocity: 35 });
+      } catch (e) {}
+
+      // 7. 花火発音時（1.6秒後）に両サイドから紙吹雪
+      setTimeout(() => {
+        try {
+          confetti({ particleCount: 80, angle: 60, spread: 75, origin: { x: 0, y: 0.65 }, colors: colors, startVelocity: 50 });
+          confetti({ particleCount: 80, angle: 120, spread: 75, origin: { x: 1, y: 0.65 }, colors: colors, startVelocity: 50 });
+        } catch (e) {}
+      }, 1600);
+    }
+
+    const cakeStage = document.getElementById('cakeStage');
+    cakeStage.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      triggerBlowOut();
+    });
+
+    const startMicBtn = document.getElementById('startMicBtn');
+    startMicBtn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      if (isBlownOut) return;
+
+      const ctx = getAudioContext();
+      startMicBtn.innerText = "マイク起動中...";
+
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        const analyser = ctx.createAnalyser();
+        micSourceNode = ctx.createMediaStreamSource(micStream);
+        micSourceNode.connect(analyser);
+        analyser.fftSize = 256;
+
+        const buffer = new Uint8Array(analyser.frequencyBinCount);
+        const flames = document.querySelectorAll('.flame-body');
+
+        startMicBtn.innerText = "準備完了！息を吹きかけて！🌬️";
+        startMicBtn.style.background = "#2a9d8f";
+        document.getElementById('guideLabel').innerText = "🕯️ スマホのマイクに強めに「フーッ」！";
+
+        let blowEnergy = 0;
+
+        function monitorMic() {
+          if (isBlownOut) return;
+
+          analyser.getByteFrequencyData(buffer);
+          let sum = 0;
+          for (let i = 0; i < buffer.length; i++) sum += buffer[i];
+          let avg = sum / buffer.length;
+
+          if (avg > 25) {
+            flames.forEach(f => f.classList.add('struggling'));
+            blowEnergy += avg;
+            if (blowEnergy > 120) {
+              triggerBlowOut();
+              return;
+            }
+          } else {
+            flames.forEach(f => f.classList.remove('struggling'));
+            blowEnergy = Math.max(0, blowEnergy - 8);
+          }
+
+          micAnimationId = requestAnimationFrame(monitorMic);
+        }
+
+        monitorMic();
+
+      } catch (err) {
+        startMicBtn.innerText = "マイクが起動できませんでした";
+        startMicBtn.style.background = "#777";
+        alert("ケーキをタップして消してください！");
+      }
+    });
+  </script>
+</body>
+</html>
